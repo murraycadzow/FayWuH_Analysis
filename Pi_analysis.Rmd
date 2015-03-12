@@ -1,0 +1,40 @@
+---
+title: "Pi_analysis"
+author: "Murray Cadzow"
+date: "13/03/2015"
+output: html_document
+---
+
+```{r, fig.height=9, fig.width=12}
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+POP=""
+#FHS=data.frame()
+#s=data.frame()
+make_graph=function(FWH,s){
+  ggplot(data = FWH, aes(x=Start, y=Pi), ylim=c(min(FWH$Pi -0.5), max(FWH$Pi + 0.5)))  + geom_point(shape = 16, colour= alpha("black", 1/5)) + facet_wrap(~CHROM, scales = "free_x")  + geom_hline(aes(yintercept= q1, colour ="quantile"), data=s,)  + geom_hline(aes(yintercept= q2, colour ="quantile"), data=s)  +geom_hline(aes(yintercept= m, colour="mean"), data=s) + scale_colour_manual("",breaks=c("mean","quantile"),values=c("blue","red")) + scale_x_continuous( xlab("Chromosome Position (Mbp)")) + ylab("Pi") + ggtitle(paste0(POP," Pi by Chromosome")) + theme( plot.background= element_rect(colour="black",fill=NA), legend.position= c(0.75, 0.12)) + theme_bw()
+}
+setwd("~/MurrayXsan/Bioinformatics/working_dir/extract/Faw/")
+
+
+for( POP in c("AXIOM","OMNI","CEU","CHB","CHS","GBR","YRI")){
+  print(POP)
+  
+  FWH=data.frame()
+  for( i in 1:22){
+    temp = read.table(file = paste0(POP,i,".faw"), header=FALSE, skip=5)
+    names(temp)=c("RefStart","Refend","RefMid","Start","End","Midpoint","NumSites","Missing","S","Eta","Eta_E","Pi","FuLi_D","FuLi_F","FayWu_H")
+    temp$CHROM = i
+    FWH=rbind(FWH,temp)
+    rm(temp)
+  }
+  
+  FWH=FWH[FWH$Pi != "NaN",]
+  s = FWH %>% group_by(CHROM) %>% summarise(m=mean(Pi), sd(Pi), min(Pi), max(Pi), q1 = quantile(Pi, 0.01), q2 = quantile(Pi, 0.99))
+  print(as.data.frame(s))
+  plot(make_graph(FWH,s))
+}
+
+```
