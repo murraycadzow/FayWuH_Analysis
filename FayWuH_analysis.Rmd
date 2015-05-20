@@ -5,7 +5,7 @@ date: "12/03/2015"
 output: html_document
 ---
 
-```{r, fig.height=9, fig.width=12}
+```{r, fig.height=9, fig.width=12, warning=FALSE}
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -18,11 +18,35 @@ get_faw = function(faw, pop){
   return(b[,c("Start","End", "FayWu_H","POP")])
 }
 
+get_genes_in_region= function(regions, size){
+  library(RMySQL)
+  drv = dbDriver("MySQL")
+  ensembl_core = dbConnect(drv, user="anonymous", host="ensembldb.ensembl.org", dbname="homo_sapiens_core_75_37", password="")
+  for(i in 1:length(regions[,1])){
+    chr= as.data.frame(regions)[i,1]
+    pos1= as.data.frame(regions)[i,2]
+    pos2 = pos1+size
+    
+    print(dbGetQuery(ensembl_core, paste0("select s.name, g.seq_region_start, g.seq_region_end, x.display_label, s.coord_system_id from  gene g, seq_region s, xref x where s.name =", chr, " AND (", pos1 ," > g.seq_region_start AND ",pos2,"  < g.seq_region_end OR ",pos1," BETWEEN g.seq_region_start AND g.seq_region_end OR ",pos2," BETWEEN g.seq_region_start AND g.seq_region_end)  AND g.display_xref_id = x.xref_id group by x.display_label order by s.name *1, g.seq_region_start")))
+  }
+}
+
+
 POP=""
 #FHS=data.frame()
 #s=data.frame()
 make_graph=function(FWH,s){
-  ggplot(data = FWH, aes(x=Start, y=FayWu_H), ylim=c(min(FWH$FayWu_H -0.5), max(FWH$FayWu_H + 0.5)))  + geom_point(shape = 16, colour= alpha("black", 1/5)) + facet_wrap(~CHROM, scales = "free_x")  + geom_hline(aes(yintercept= q1, colour ="quantile"), data=s,)  + geom_hline(aes(yintercept= q2, colour ="quantile"), data=s)  +geom_hline(aes(yintercept= m, colour="mean"), data=s) + scale_colour_manual("",breaks=c("mean","quantile"),values=c("blue","red")) + scale_x_continuous( xlab("Chromosome Position (Mbp)")) + ylab("Fay and Wu's H") + ggtitle(paste0(POP," Fay and Wu's H by Chromosome")) + theme( plot.background= element_rect(colour="black",fill=NA), legend.position= c(0.75, 0.12)) + theme_bw()
+  ggplot(data = FWH, aes(x=Start, y=FayWu_H), ylim=c(min(FWH$FayWu_H -0.5), max(FWH$FayWu_H + 0.5)))  + 
+    geom_point(shape = 16, colour= alpha("black", 1/5)) + 
+    facet_wrap(~CHROM, scales = "free_x")  + 
+    geom_hline(aes(yintercept= q1, colour ="quantile"), data=s,)  + 
+    geom_hline(aes(yintercept= q2, colour ="quantile"), data=s)  +
+    geom_hline(aes(yintercept= m, colour="mean"), data=s) + 
+    scale_colour_manual("",breaks=c("mean","quantile"),values=c("green","red")) + 
+    scale_x_continuous( xlab("Chromosome Position (Mbp)")) + 
+    ylab("Fay and Wu's H") + ggtitle(paste0(POP," Fay and Wu's H by Chromosome")) + 
+    theme( plot.background= element_rect(colour="black",fill=NA), legend.position= c(0.75, 0.12)) + 
+    theme_bw()
 }
 setwd("~/MurrayXsan/Bioinformatics/working_dir/extract/Faw/")
 
@@ -41,8 +65,12 @@ for( POP in c("AXIOM","OMNI","CEU","CHB","CHS","GBR","YRI")){
   
   FWH=FWH[FWH$FayWu_H != "NaN",]
   s = FWH %>% group_by(CHROM) %>% summarise(m=mean(FayWu_H), sd(FayWu_H), min(FayWu_H), max(FayWu_H), q1 = quantile(FayWu_H, 0.01), q2 = quantile(FayWu_H, 0.99))
-  print(as.data.frame(s))
+  print(as.data.frame(round(s), digits=2))
   plot(make_graph(FWH,s))
+  top = FWH %>% arrange(FayWu_H) %>% select(CHROM, Start,End, NumSites, FayWu_H) %>% head(n=10)
+    #filter(min(TajimaD) == TajimaD | max(TajimaD) == TajimaD) 
+  print(round(as.data.frame(top), digits =3))
+  get_genes_in_region(as.data.frame(top[,c("CHROM", "Start")]), size=30000)
 }
 
 ```
