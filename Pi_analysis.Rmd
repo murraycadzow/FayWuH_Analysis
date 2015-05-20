@@ -14,7 +14,17 @@ POP=""
 #FHS=data.frame()
 #s=data.frame()
 make_graph=function(FWH,s){
-  ggplot(data = FWH, aes(x=Start, y=Pi), ylim=c(min(FWH$Pi -0.5), max(FWH$Pi + 0.5)))  + geom_point(shape = 16, colour= alpha("black", 1/5)) + facet_wrap(~CHROM, scales = "free_x")  + geom_hline(aes(yintercept= q1, colour ="quantile"), data=s,)  + geom_hline(aes(yintercept= q2, colour ="quantile"), data=s)  +geom_hline(aes(yintercept= m, colour="mean"), data=s) + scale_colour_manual("",breaks=c("mean","quantile"),values=c("blue","red")) + scale_x_continuous( xlab("Chromosome Position (Mbp)")) + ylab("Pi") + ggtitle(paste0(POP," Pi by Chromosome")) + theme( plot.background= element_rect(colour="black",fill=NA), legend.position= c(0.75, 0.12)) + theme_bw()
+  ggplot(data = FWH, aes(x=Start, y=Pi), ylim=c(min(FWH$Pi -0.5), max(FWH$Pi + 0.5)))  + 
+    geom_point(shape = 16, colour= alpha("black", 1/5)) + 
+    facet_wrap(~CHROM, scales = "free_x")  + 
+    geom_hline(aes(yintercept= q1, colour ="quantile"), data=s,)  + 
+    geom_hline(aes(yintercept= q2, colour ="quantile"), data=s)  +
+    geom_hline(aes(yintercept= m, colour="mean"), data=s) + 
+    scale_colour_manual("",breaks=c("mean","quantile"),values=c("blue","red")) + 
+    scale_x_continuous( xlab("Chromosome Position (Mbp)")) + ylab("Pi") + 
+    ggtitle(paste0(POP," Pi by Chromosome")) + 
+    theme( plot.background= element_rect(colour="black",fill=NA), legend.position= c(0.75, 0.12)) + 
+    theme_bw()
 }
 setwd("~/MurrayXsan/Bioinformatics/working_dir/extract/Faw/")
 
