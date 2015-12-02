@@ -27,7 +27,7 @@ get_genes_in_region= function(regions, size){
     pos1= as.data.frame(regions)[i,2]
     pos2 = pos1+size
     
-    print(dbGetQuery(ensembl_core, paste0("select s.name, g.seq_region_start, g.seq_region_end, x.display_label, s.coord_system_id from  gene g, seq_region s, xref x where s.name =", chr, " AND (", pos1 ," > g.seq_region_start AND ",pos2,"  < g.seq_region_end OR ",pos1," BETWEEN g.seq_region_start AND g.seq_region_end OR ",pos2," BETWEEN g.seq_region_start AND g.seq_region_end)  AND g.display_xref_id = x.xref_id group by x.display_label order by s.name *1, g.seq_region_start")))
+    print(dbGetQuery(ensembl_core, paste0("select s.name, g.seq_region_start, g.seq_region_end, x.display_label, s.coord_system_id from  gene g, seq_region s, xref x where s.name =", chr, " AND (", pos1 ," > g.seq_region_start AND ",pos2,"  < g.seq_region_end OR ",pos1," BETWEEN g.seq_region_start AND g.seq_region_end OR ",pos2," BETWEEN g.seq_region_start AND g.seq_region_end)  AND g.display_xref_id = x.xref_id group by x.display_label AND s.seq_region_id = g.seq_region_id order by s.name *1, g.seq_region_start")))
   }
 }
 
